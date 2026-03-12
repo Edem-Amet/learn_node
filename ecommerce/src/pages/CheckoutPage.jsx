@@ -5,7 +5,7 @@ import formatMoney from '../utils/money';
 import './checkout-header.css';
 import './checkoutPage.css';
 
-function CheckoutPage({ cart }) {
+function CheckoutPage({ cart, loadCart }) {
     const [deliveryOptions, setdeliveryOptions] = useState([]);
     const [paymentSummary, setPaymentSummary] = useState(null);
 
@@ -19,7 +19,7 @@ function CheckoutPage({ cart }) {
         };
 
         fetchCheckoutData();
-    }, []);
+    }, [cart]);
 
     return (
         <>
@@ -49,7 +49,7 @@ function CheckoutPage({ cart }) {
                 <div className="page-title">Review your order</div>
 
                 <div className="checkout-grid">
-                    <div className="order-summary">
+                    <div className="order-summary" loadCart={loadCart}>
                         {deliveryOptions.length > 0 && cart.map((cartItem) => {
                             const selectedDeliveryOption = deliveryOptions.find((deliveryOption) => {
                                 return deliveryOption.id === cartItem.deliveryOptionId;
@@ -95,9 +95,18 @@ function CheckoutPage({ cart }) {
                                                 if (deliveryOption.priceCents > 0) {
                                                     priceString = `${formatMoney(deliveryOption.priceCents)} - shipping`;
                                                 }
+
+                                                const updateDeliveryOption = async () => {
+                                                    await axios.put(`api/cart-items/${cartItem.productId}`, {
+                                                        deliveryOptionId: deliveryOption.id
+                                                    });
+                                                    await loadCart();
+                                                };
+
                                                 return (
-                                                    <div key={deliveryOption.id} className="delivery-option">
+                                                    <div key={deliveryOption.id} className="delivery-option" onClick={updateDeliveryOption}>
                                                         <input type="radio" checked={deliveryOption.id === cartItem.deliveryOptionId}
+                                                            onChange={() => { }}
                                                             className="delivery-option-input"
                                                             name={`delivery-option-${cartItem.productId}`} />
                                                         <div>
