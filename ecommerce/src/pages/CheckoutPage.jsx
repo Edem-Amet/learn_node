@@ -1,5 +1,6 @@
 import axios from 'axios';
 import dayjs from 'dayjs';
+import { useNavigate } from 'react-router';
 import { useState, useEffect } from 'react';
 import formatMoney from '../utils/money';
 import './checkout-header.css';
@@ -8,6 +9,14 @@ import './checkoutPage.css';
 function CheckoutPage({ cart, loadCart }) {
     const [deliveryOptions, setdeliveryOptions] = useState([]);
     const [paymentSummary, setPaymentSummary] = useState(null);
+    const navigate = useNavigate();
+
+    const createOrder = async () => {
+        await axios.post('/api/orders');
+        await loadCart();
+        navigate('/orders')
+    };
+
 
     useEffect(() => {
         const fetchCheckoutData = async () => {
@@ -55,6 +64,18 @@ function CheckoutPage({ cart, loadCart }) {
                                 return deliveryOption.id === cartItem.deliveryOptionId;
                             });
 
+                            const deleteCartItem = async () => {
+                                await axios.delete(`/api/cart-items/${cartItem.productId}`);
+                                await loadCart();
+                            }
+
+                            const updateCartItemQuantity = async (quantity) => {
+                                await axios.put(`/api/cart-items/${cartItem.productId}`, {
+                                    quantity
+                                });
+                                await loadCart();
+                            }
+
                             return (
                                 <div key={cartItem.productId} className="cart-item-container">
                                     <div className="delivery-date">
@@ -76,10 +97,12 @@ function CheckoutPage({ cart, loadCart }) {
                                                 <span>
                                                     Quantity: <span className="quantity-label">{cartItem.quantity}</span>
                                                 </span>
-                                                <span className="update-quantity-link link-primary">
+                                                <span className="update-quantity-link link-primary"
+                                                    onClick={() => updateCartItemQuantity(cartItem.quantity + 1)}>
                                                     Update
                                                 </span>
-                                                <span className="delete-quantity-link link-primary">
+                                                <span className="delete-quantity-link link-primary"
+                                                    onClick={deleteCartItem}>
                                                     Delete
                                                 </span>
                                             </div>
@@ -160,7 +183,8 @@ function CheckoutPage({ cart, loadCart }) {
                                     <div className="payment-summary-money">{formatMoney(paymentSummary.totalCostCents)}</div>
                                 </div>
 
-                                <button className="place-order-button button-primary">
+                                <button className="place-order-button button-primary"
+                                    onClick={createOrder} >
                                     Place your order
                                 </button>
                             </>
